@@ -1,33 +1,33 @@
 export const COLORS = {
-  // Primary brand colors - Soft teal/turquoise for trust and calm
-  primary: '#2DD4BF',
-  primaryDark: '#14B8A6',
-  primaryLight: '#5EEADF',
+  // Primary brand colors - Muted rose and dusty blush tones
+  primary: '#C98298',
+  primaryDark: '#A65E77',
+  primaryLight: '#E5B7C4',
   
-  // Background & Surface - Softer, warmer dark tones
-  background: '#0F1419',
-  surface: '#1A2332',
-  surfaceLight: '#253549',
+  // Background & Surface - Deep cocoa and soft mauve tones
+  background: '#241B20',
+  surface: '#32262D',
+  surfaceLight: '#44343D',
   
-  // Text colors - Better readability
-  textPrimary: '#F3F4F6',
-  textSecondary: '#A8B5C8',
-  textTertiary: '#7A8A9E',
-  textOnPrimary: '#0F1419',
+  // Text colors - Warm cream and muted rose neutrals
+  textPrimary: '#F8F0F1',
+  textSecondary: '#D1BEC4',
+  textTertiary: '#A89199',
+  textOnPrimary: '#2B1820',
   
-  // Semantic colors - Softer, more natural
-  success: '#34D399',
-  error: '#F87171',
-  warning: '#FBBF24',
-  info: '#60A5FA',
+  // Semantic colors - Natural floral and earthy accents
+  success: '#9AAF83',
+  error: '#D87870',
+  warning: '#D6A45D',
+  info: '#A492B2',
   
   // UI elements
-  border: '#3A4A63',
-  shadow: 'rgba(0, 0, 0, 0.4)',
-  overlay: 'rgba(15, 20, 25, 0.6)',
+  border: '#604853',
+  shadow: 'rgba(24, 12, 18, 0.45)',
+  overlay: 'rgba(28, 17, 23, 0.7)',
   
   // Special
-  card: '#34D399',
-  additional: '#FB923C',
-  accent: '#FBBF24'
+  card: '#3A2C34',
+  additional: '#C58C76',
+  accent: '#D6A45D'
 } as const;

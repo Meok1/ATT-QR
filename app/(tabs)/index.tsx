@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.primary,
-    borderOpacity: 0.15,
   },
   cardTitle: {
     fontSize: 17,
