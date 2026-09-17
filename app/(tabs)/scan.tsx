@@ -6,9 +6,11 @@ import AppButton from '@/components/AppButton';
 import Card from '@/components/Card';
 import { COLORS } from '@/constants/colors';
 import { STUDENT_ID } from '@/constants/student';
-import { registerAttendance } from '@/lib/database'; 
+import { useAuth } from '@/lib/auth';
+import { registerAttendance } from '@/lib/database';
 
 export default function ScanScreen() {
+  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [lastData, setLastData] = useState<string | null>(null);
@@ -42,19 +44,27 @@ export default function ScanScreen() {
     );
   }
 
-  const handleBarcodeScanned = ({ data }: { data: string }) => {
+  const handleBarcodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
     setLastData(data);
-    registerAttendance(data, STUDENT_ID).then((result) => {
+    setSuccess(false);
+    setMessage('Recording attendance...');
+
+    try {
+      const result = await registerAttendance(data, user?.id ?? STUDENT_ID);
       setMessage(result.message);
       setSuccess(result.success);
-    });
+    } catch {
+      setMessage('Could not save attendance. Please try again.');
+      setSuccess(false);
+    }
   };
 
   const handleScanAgain = () => {
     setScanned(false);
     setLastData(null);
     setMessage(null);
+    setSuccess(false);
   };
 
   return (

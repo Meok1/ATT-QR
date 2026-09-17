@@ -356,6 +356,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 16,
+    
   },
 });
 

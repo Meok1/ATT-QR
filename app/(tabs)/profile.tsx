@@ -1,171 +1,85 @@
-import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+
+import AppButton from '@/components/AppButton';
 import { COLORS } from '@/constants/colors';
-import Card from '@/components/Card';
-import Header from '@/components/Header';
+import { useAuth, signOut } from '@/lib/auth';
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      await signOut();
+      router.replace('/login');
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to sign out.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Header title="Profile" />
+    <View style={styles.container}>
+      <Text style={styles.title}>My Profile</Text>
 
-        <View style={styles.contentContainer}>
-          <Card variant="elevated" style={styles.profileCard}>
-            <View style={styles.avatarSection}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>👤</Text>
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>User Profile</Text>
-                <Text style={styles.userStatus}>Active Student</Text>
-              </View>
-            </View>
-          </Card>
+      {user && (
+        <View style={styles.infoCard}>
+          <Text style={styles.label}>Email</Text>
+          <Text style={styles.value}>{user.email}</Text>
 
-          <Text style={styles.sectionTitle}>Attendance Summary</Text>
-          <Card variant="default">
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>--</Text>
-                <Text style={styles.statLabel}>Total Scans</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>--</Text>
-                <Text style={styles.statLabel}>This Month</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>--</Text>
-                <Text style={styles.statLabel}>Streak</Text>
-              </View>
-            </View>
-          </Card>
-
-          <Text style={styles.sectionTitle}>Coming Soon</Text>
-          <Card variant="outlined">
-            <View style={styles.comingSoonItem}>
-              <Text style={styles.comingSoonEmoji}>🔧</Text>
-              <View>
-                <Text style={styles.comingSoonTitle}>Profile Customization</Text>
-                <Text style={styles.comingSoonText}>Manage your profile information</Text>
-              </View>
-            </View>
-          </Card>
-
-          <Card variant="outlined" style={styles.marginTop}>
-            <View style={styles.comingSoonItem}>
-              <Text style={styles.comingSoonEmoji}>⚙️</Text>
-              <View>
-                <Text style={styles.comingSoonTitle}>Settings</Text>
-                <Text style={styles.comingSoonText}>Notification preferences & more</Text>
-              </View>
-            </View>
-          </Card>
+          <Text style={styles.label}>User ID</Text>
+          <Text style={styles.valueSmall}>{user.id}</Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+
+      <AppButton
+        title="Sign Out"
+        icon="log-out-outline"
+        onPress={handleSignOut}
+        disabled={loading}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: COLORS.background,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  contentContainer: {
-    marginTop: 16,
-  },
-  profileCard: {
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  avatarSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: COLORS.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  avatarText: {
-    fontSize: 32,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 3,
-  },
-  userStatus: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginTop: 20,
-    marginBottom: 11,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 8,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
-  },
-  comingSoonItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  comingSoonEmoji: {
-    fontSize: 28,
-    marginRight: 14,
-  },
-  comingSoonTitle: {
-    fontSize: 14,
+  title: {
+    fontSize: 20,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    marginBottom: 3,
+    marginBottom: 16,
   },
-  comingSoonText: {
+  infoCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 24,
+  },
+  label: {
     fontSize: 12,
+    fontWeight: '600',
     color: COLORS.textSecondary,
+    marginBottom: 4,
+    marginTop: 8,
   },
-  marginTop: {
-    marginTop: 11,
+  value: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  valueSmall: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
   },
 });

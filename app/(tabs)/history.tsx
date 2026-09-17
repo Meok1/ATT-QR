@@ -7,18 +7,20 @@ import Card from '@/components/Card';
 import Header from '@/components/Header';
 import { COLORS } from '@/constants/colors';
 import { STUDENT_ID } from '@/constants/student';
+import { useAuth } from '@/lib/auth';
 import { getAttendanceHistory, type AttendanceRecord } from '@/lib/database';
 
 export default function HistoryScreen() {
+  const { user } = useAuth();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadHistory = useCallback(() => {
-    getAttendanceHistory(STUDENT_ID).then((rows) => {
+    getAttendanceHistory(user?.id ?? STUDENT_ID).then((rows) => {
       setRecords(rows);
       setLoading(false);
     });
-  }, []);
+  }, [user?.id]);
 
   useFocusEffect(
     useCallback(() => {
