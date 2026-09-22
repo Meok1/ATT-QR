@@ -1,33 +1,8 @@
 export const COLORS = {
-  // Primary brand colors - Muted rose and dusty blush tones
-  primary: '#C98298',
-  primaryDark: '#A65E77',
-  primaryLight: '#E5B7C4',
-  
-  // Background & Surface - Deep cocoa and soft mauve tones
-  background: '#241B20',
-  surface: '#32262D',
-  surfaceLight: '#44343D',
-  
-  // Text colors - Warm cream and muted rose neutrals
-  textPrimary: '#F8F0F1',
-  textSecondary: '#D1BEC4',
-  textTertiary: '#A89199',
-  textOnPrimary: '#2B1820',
-  
-  // Semantic colors - Natural floral and earthy accents
-  success: '#9AAF83',
-  error: '#D87870',
-  warning: '#D6A45D',
-  info: '#A492B2',
-  
-  // UI elements
-  border: '#604853',
-  shadow: 'rgba(24, 12, 18, 0.45)',
-  overlay: 'rgba(28, 17, 23, 0.7)',
-  
-  // Special
-  card: '#3A2C34',
-  additional: '#C58C76',
-  accent: '#D6A45D'
+  primary: '#2E7D5B', primaryDark: '#216045', primaryLight: '#CFE6DA',
+  background: '#F7F6F2', card: '#FFFFFF', surface: '#EFF3F0', surfaceLight: '#E1ECE5',
+  textPrimary: '#14181F', textSecondary: '#5D6B7A', textTertiary: '#778492', textOnPrimary: '#FFFFFF',
+  border: '#DADFE3', shadow: '#14181F', overlay: 'rgba(20, 24, 31, 0.65)',
+  warning: '#C97A2B', success: '#2E7D5B', error: '#B3261E', danger: '#B3261E', info: '#3867A8',
+  additional: '#C97A2B', accent: '#C97A2B',
 } as const;

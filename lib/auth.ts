@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import type { Session, User } from '@supabase/supabase-js';
+import type { Role } from './profiles';
 
 type AuthState = {
   session: Session | null;
@@ -40,8 +41,17 @@ export function useAuth(): AuthState {
   };
 }
 
-export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+export type SignUpProfile = { full_name: string; role: Role };
+
+export async function signUp(email: string, password: string, profile?: SignUpProfile) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: profile },
+  });
+  if (!error && data.session && profile) {
+    await supabase.from('profiles').update(profile).eq('id', data.session.user.id);
+  }
   if (!error && data.session) {
     setAuth(data.session);
   }

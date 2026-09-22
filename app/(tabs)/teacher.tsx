@@ -2,7 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   Platform,
   Pressable,
@@ -16,7 +17,10 @@ import QRCode from 'react-native-qrcode-svg';
 
 import AppButton from '@/components/AppButton';
 import { COLORS } from '@/constants/colors';
-import { createEvent } from '@/lib/database';
+import { createEvent } from '@/lib/events';
+import { buildQRPayload } from '@/lib/qr';
+import { getProfile, type Role } from '@/lib/profiles';
+import { useAuth } from '@/lib/auth';
 
 function toLocalISO(date: Date) {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -43,6 +47,7 @@ const QUICK_END_OPTIONS = [
 type EditTarget = 'start' | 'end';
 
 export default function TeacherScreen() {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [eventId, setEventId] = useState('');
   const [startDate, setStartDate] = useState(() => new Date());
@@ -53,8 +58,22 @@ export default function TeacherScreen() {
   const [editingPart, setEditingPart] = useState<'date' | 'time'>('date');
   const [payload, setPayload] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [role, setRole] = useState<Role | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const isAndroid = Platform.OS === 'android';
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    setRoleLoading(true);
+    if (!user) { setRole(null); setRoleLoading(false); return () => { active = false; }; }
+    getProfile(user.id).then((profile) => {
+      if (!active) return;
+      setRole(profile?.role ?? 'student');
+      setRoleLoading(false);
+    });
+    return () => { active = false; };
+  }, [user]));
 
   const openPicker = (target: EditTarget) => {
     setMessage(null);
@@ -112,19 +131,15 @@ export default function TeacherScreen() {
       return;
     }
 
-    createEvent(event).then(() => {
+    createEvent(event).then(({ error }) => {
+      if (error) { setMessage(error); return; }
       setMessage('Event saved! Scan the QR with the Scan tab to test it.');
-      setPayload(
-        JSON.stringify({
-          v: 1,
-          event: event.eventId,
-          title: event.title,
-          start: event.start,
-          end: event.end,
-        })
-      );
-    });
+      setPayload(buildQRPayload(event));
+    }).catch(() => setMessage('Could not save the event. Please try again.'));
   };
+
+  if (roleLoading) return <View style={styles.center}><Text style={styles.subtitle}>Checking your account…</Text></View>;
+  if (role !== 'teacher') return <View style={styles.center}><Ionicons name="lock-closed-outline" size={42} color={COLORS.warning} /><Text style={styles.title}>Teachers Only</Text><Text style={styles.subtitle}>Only teacher accounts can create event QR codes.</Text></View>;
 
   return (
     <ScrollView
@@ -246,6 +261,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 40,
   },
+  center: { flex: 1, alignItems: 'center', backgroundColor: COLORS.background, justifyContent: 'center', padding: 32 },
   title: {
     fontSize: 20,
     fontWeight: '600',

@@ -5,9 +5,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import AppButton from '@/components/AppButton';
 import Card from '@/components/Card';
 import { COLORS } from '@/constants/colors';
-import { STUDENT_ID } from '@/constants/student';
 import { useAuth } from '@/lib/auth';
-import { registerAttendance } from '@/lib/database';
+import { registerAttendance } from '@/lib/attendance';
 
 export default function ScanScreen() {
   const { user } = useAuth();
@@ -17,10 +16,7 @@ export default function ScanScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-
-  if (!permission) {
-    return <View style={styles.container} />;
-  }
+  if (!permission) return <View style={styles.container} />;
 
   if (!permission.granted) {
     return (
@@ -28,228 +24,62 @@ export default function ScanScreen() {
         <View style={styles.permissionContent}>
           <Text style={styles.permissionEmoji}>📷</Text>
           <Text style={styles.title}>Camera Permission Required</Text>
-          <Text style={styles.subtitle}>
-            We need access to your camera to scan QR codes and record attendance.
-          </Text>
-          <View style={styles.buttonContainer}>
-            <AppButton
-              theme="primary"
-              title="Grant Permission"
-              icon="camera"
-              onPress={requestPermission}
-            />
-          </View>
+          <Text style={styles.subtitle}>We need access to your camera to scan QR codes and record attendance.</Text>
+          <View style={styles.buttonContainer}><AppButton theme="primary" title="Grant Permission" icon="camera" onPress={requestPermission} /></View>
         </View>
       </View>
     );
   }
 
-  const handleBarcodeScanned = async ({ data }: { data: string }) => {
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
     setScanned(true);
     setLastData(data);
-    setSuccess(false);
-    setMessage('Recording attendance...');
-
-    try {
-      const result = await registerAttendance(data, user?.id ?? STUDENT_ID);
+    registerAttendance(data, user?.id ?? 'unknown').then((result) => {
       setMessage(result.message);
       setSuccess(result.success);
-    } catch {
-      setMessage('Could not save attendance. Please try again.');
-      setSuccess(false);
-    }
+    });
   };
 
   const handleScanAgain = () => {
     setScanned(false);
     setLastData(null);
     setMessage(null);
-    setSuccess(false);
   };
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-      />
-
-      {!scanned && (
-        <View style={styles.guidanceContainer}>
-          <View style={styles.guidanceBox}>
-            <Text style={styles.guidanceEmoji}>✨</Text>
-            <Text style={styles.guidanceText}>Point at a QR code</Text>
-          </View>
-        </View>
-      )}
-
-      {scanned && (
-        <View style={styles.resultOverlay}>
-          <Card variant="elevated" style={styles.resultCard}>
-            <View style={[styles.resultHeader, success && styles.resultHeaderSuccess, !success && styles.resultHeaderError]}>
-              <Text style={styles.resultEmoji}>{success ? '✅' : '❌'}</Text>
-            </View>
-            
-            <Text style={styles.resultTitle}>
-              {success ? 'Recorded' : 'Failed'}
-            </Text>
-            
-            {message && (
-              <Text style={[styles.resultMessage, success ? styles.successText : styles.errorText]}>
-                {message}
-              </Text>
-            )}
-
-            {lastData && (
-              <View style={styles.dataContainer}>
-                <Text style={styles.dataLabel}>QR Data:</Text>
-                <Text style={styles.dataValue}>{lastData}</Text>
-              </View>
-            )}
-
-            <View style={styles.resultButtonContainer}>
-              <AppButton
-                theme="primary"
-                title="Scan Again"
-                icon="refresh"
-                onPress={handleScanAgain}
-              />
-            </View>
-          </Card>
-        </View>
-      )}
+      <CameraView style={styles.camera} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={scanned ? undefined : handleBarcodeScanned} />
+      {!scanned && <View style={styles.guidanceContainer}><View style={styles.guidanceBox}><Text style={styles.guidanceText}>Point at a QR code</Text></View></View>}
+      {scanned && <View style={styles.resultOverlay}><Card variant="elevated" style={styles.resultCard}>
+        <Text style={styles.resultEmoji}>{success ? '✅' : '❌'}</Text>
+        <Text style={styles.resultTitle}>{success ? 'Recorded' : 'Failed'}</Text>
+        {message && <Text style={[styles.resultMessage, success ? styles.successText : styles.errorText]}>{message}</Text>}
+        {lastData && <View style={styles.dataContainer}><Text style={styles.dataLabel}>QR Data:</Text><Text style={styles.dataValue}>{lastData}</Text></View>}
+        <AppButton theme="primary" title="Scan Again" icon="refresh" onPress={handleScanAgain} />
+      </Card></View>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  camera: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  permissionContent: {
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  permissionEmoji: {
-    fontSize: 64,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 21,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    width: '100%',
-    minWidth: 200,
-  },
-  guidanceContainer: {
-    position: 'absolute',
-    bottom: 80,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  guidanceBox: {
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    backgroundColor: COLORS.overlay,
-    borderRadius: 12,
-  },
-  guidanceEmoji: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  guidanceText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  resultOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.overlay,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    paddingTop: 20,
-  },
-  resultCard: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  resultHeader: {
-    alignItems: 'center',
-    paddingBottom: 14,
-    marginBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  resultHeaderSuccess: {
-    borderBottomColor: COLORS.success,
-  },
-  resultHeaderError: {
-    borderBottomColor: COLORS.error,
-  },
-  resultEmoji: {
-    fontSize: 44,
-  },
-  resultTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  resultMessage: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 14,
-    fontWeight: '500',
-  },
-  successText: {
-    color: COLORS.success,
-  },
-  errorText: {
-    color: COLORS.error,
-  },
-  dataContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 10,
-    padding: 11,
-    marginBottom: 14,
-  },
-  dataLabel: {
-    fontSize: 11,
-    color: COLORS.textTertiary,
-    marginBottom: 6,
-    fontWeight: '600',
-  },
-  dataValue: {
-    fontSize: 12,
-    color: COLORS.textPrimary,
-    fontFamily: 'monospace',
-  },
-  resultButtonContainer: {
-    marginTop: 8,
-  },
+  container: { flex: 1, alignItems: 'center', backgroundColor: COLORS.background, justifyContent: 'center' },
+  camera: { ...StyleSheet.absoluteFillObject },
+  permissionContent: { alignItems: 'center', paddingHorizontal: 32 },
+  permissionEmoji: { fontSize: 64, marginBottom: 20 },
+  title: { color: COLORS.textPrimary, fontSize: 21, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
+  subtitle: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 21, marginBottom: 24, textAlign: 'center' },
+  buttonContainer: { minWidth: 200, width: '100%' },
+  guidanceContainer: { alignItems: 'center', bottom: 80, left: 0, position: 'absolute', right: 0 },
+  guidanceBox: { backgroundColor: COLORS.overlay, borderRadius: 12, paddingHorizontal: 22, paddingVertical: 14 },
+  guidanceText: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '600' },
+  resultOverlay: { backgroundColor: COLORS.overlay, bottom: 0, left: 0, paddingHorizontal: 16, paddingBottom: 24, paddingTop: 20, position: 'absolute', right: 0 },
+  resultCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  resultEmoji: { fontSize: 44, textAlign: 'center' },
+  resultTitle: { color: COLORS.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 10, textAlign: 'center' },
+  resultMessage: { fontSize: 13, fontWeight: '500', marginBottom: 14, textAlign: 'center' },
+  successText: { color: COLORS.success },
+  errorText: { color: COLORS.error },
+  dataContainer: { backgroundColor: COLORS.surface, borderRadius: 10, marginBottom: 14, padding: 11 },
+  dataLabel: { color: COLORS.textTertiary, fontSize: 11, fontWeight: '600', marginBottom: 6 },
+  dataValue: { color: COLORS.textPrimary, fontFamily: 'monospace', fontSize: 12 },
 });
